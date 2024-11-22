@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real-Time Sentiment Analysis</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #e1e8f0;
+        color: #333;
+        max-width: 700px;
+        margin: 50px auto;
+        padding: 20px;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        border-radius: 15px;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2.5em;
+        color: #0056b3;
+        margin-bottom: 20px;
+      }
+
+      .input-container {
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      textarea {
+        width: 95%;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        resize: none;
+        font-size: 1.1em;
+        margin-bottom: 20px;
+        box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .button {
+        padding: 12px 25px;
+        background-color: #0056b3;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 1.2em;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .button:hover {
+        background-color: #003d80;
+        transform: scale(1.05);
+      }
+
+      .result-container {
+        margin-top: 30px;
+        text-align: center;
+        padding: 20px;
+        background: #eee6e6;
+        border: 1px solid #ccc;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .result-container img {
+        width: 80px;
+        margin: 15px auto;
+        display: block;
+      }
+
+      .sentiment {
+        font-size: 1.8em;
+        color: #333;
+        margin: 10px 0;
+      }
+
+      .cleaned-text {
+        font-style: italic;
+        color: #666;
+        margin-top: 10px;
+        font-size: 1.2em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Real-Time Sentiment Analysis</h1>
+
+    <div class="input-container">
+      <textarea
+        id="userInput"
+        rows="4"
+        placeholder="Enter text for analysis..."
+      ></textarea>
+      <button id="analyzeBtn" class="button" onclick="analyzeText()">
+        Analyze
+      </button>
+    </div>
+
+    <div class="result-container" id="result">
+      <p>Results will appear here...</p>
+    </div>
+
+    <script>
+      async function analyzeText() {
+        const userInput = document.getElementById("userInput").value;
+        const resultDiv = document.getElementById("result");
+        if (!userInput.trim()) {
+          alert("Please enter text for analysis.");
+          return;
+        }
+
+        // Show a loading message
+        resultDiv.innerHTML = `<p>Analyzing...</p>`;
+
+        try {
+          const response = await fetch("http://127.0.0.1:5000/analyze_text", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text: userInput }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Server response wasn’t OK");
+          }
+
+          const data = await response.json();
+          const sentiment = data.sentiment;
+          const cleanedText = data.cleaned_text;
+
+          let sentimentImage = "";
+          if (sentiment === "Positive") {
+            sentimentImage = "positive.png";
+          } else if (sentiment === "Negative") {
+            sentimentImage = "negative.png";
+          } else {
+            sentimentImage = "neutral.png";
+          }
+
+          resultDiv.innerHTML = `
+                    <p class="sentiment">Sentiment: ${sentiment}</p>
+                    <img src="${sentimentImage}" alt="${sentiment} Emoji">
+                    <p class="cleaned-text">Cleaned Text: "${cleanedText}"</p>
+                `;
+        } catch (error) {
+          console.error("Error:", error);
+          resultDiv.innerHTML = `<p style="color: red;">Error: Failed to analyze text. Please try again.</p>`;
+        }
+      }
+    </script>
+  </body>
+</html>
